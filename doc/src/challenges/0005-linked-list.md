@@ -19,7 +19,7 @@ The internal representations of `linked_list` are bi-direction linked list nodes
 
 ### Success Criteria
 
-The memory safety of all public functions that iterating over the internal inductive data type must be verified, e.g.:
+The memory safety of the following public functions that iterating over the internal inductive data type must be verified:
 
 | Function | Location |
 |---------|---------|
@@ -33,6 +33,8 @@ The memory safety of all public functions that iterating over the internal induc
 
 
 The verification must be unbounded---it must hold for linked lists of arbitrary shape.
+
+It is OK to assume that the generic type `T` of the proofs is primitive types, e.g., `i32`, `u32`, `bool`, etc.
 
 ### List of UBs
 
