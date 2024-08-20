@@ -36,7 +36,7 @@ Write contracts for the following public functions that show that they actually 
 The memory safety and the contracts of the above listed functions must be verified
 for all possible slices with arbitrary valid length.
 
-Note that most of the function listed above calls functions that contain loops.
+Note that most of the functions listed above call functions that contain loops.
 Function contracts and loop contracts of those callee functions may be required.
 
 ### List of UBs
