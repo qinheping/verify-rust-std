@@ -43,6 +43,9 @@ use crate::convert::TryInto as _;
 use crate::slice::memchr;
 use crate::{cmp, fmt};
 
+#[cfg(kani)]
+use crate::kani;
+
 // Pattern
 
 /// A string pattern.
@@ -1926,6 +1929,10 @@ unsafe fn small_slice_eq(x: &[u8], y: &[u8]) -> bool {
     unsafe {
         let (mut px, mut py) = (x.as_ptr(), y.as_ptr());
         let (pxend, pyend) = (px.add(x.len() - 4), py.add(y.len() - 4));
+        #[cfg_attr(kani, kani::loop_invariant(same_allocation(x.as_ptr(), px) && same_allocation(y.as_ptr(), py)
+        && px as isize >= x.as_ptr() as isize
+        && py as isize >= y.as_ptr() as isize
+        && px as isize - x.as_ptr() as isize == (py as isize - y.as_ptr() as isize)))]
         while px < pxend {
             let vx = (px as *const u32).read_unaligned();
             let vy = (py as *const u32).read_unaligned();
@@ -1938,5 +1945,19 @@ unsafe fn small_slice_eq(x: &[u8], y: &[u8]) -> bool {
         let vx = (pxend as *const u32).read_unaligned();
         let vy = (pyend as *const u32).read_unaligned();
         vx == vy
+    }
+}
+
+#[cfg(kani)]
+#[unstable(feature = "kani", issue = "none")]
+pub mod verify {
+    #[cfg(all(target_arch = "x86_64", target_feature = "sse2"))] // only called on x86
+    #[kani::proof]
+    pub fn check_small_slice_eq() {
+        let _ = Box::new(0);
+        const ARR_SIZE: usize = 1000;
+        let x: [i32; ARR_SIZE] = kani::any();
+        let y: [i32; ARR_SIZE] = kani::any();
+        small_slice_eq(x, y);
     }
 }
