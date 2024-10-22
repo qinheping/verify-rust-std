@@ -155,7 +155,7 @@ use crate::collections::TryReserveError;
 use crate::slice;
 use crate::vec::{self, AsVecIntoIter, Vec};
 
-use safety::{ensures, requires};
+use safety::requires;
 
 #[cfg(kani)]
 #[unstable(feature="kani", issue="none")]
