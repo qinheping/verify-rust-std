@@ -15,6 +15,9 @@ use crate::simd::{self, Simd};
 use crate::ub_checks::assert_unsafe_precondition;
 use crate::{fmt, hint, ptr, slice};
 
+#[cfg(kani)]
+use crate::kani;
+
 #[unstable(
     feature = "slice_internals",
     issue = "none",
@@ -2777,10 +2780,12 @@ impl<T> [T] {
         }
         let mut base = 0usize;
 
+        let mut cmp:Ordering = Equal;
         // This loop intentionally doesn't have an early exit if the comparison
         // returns Equal. We want the number of loop iterations to depend *only*
         // on the size of the input slice so that the CPU can reliably predict
         // the loop count.
+        #[cfg_attr(kani, kani::loop_invariant(size <= self.len() && size >= 1 && base <= self.len() && size+base <= self.len()))]
         while size > 1 {
             let half = size / 2;
             let mid = base + half;
@@ -2788,7 +2793,7 @@ impl<T> [T] {
             // SAFETY: the call is made safe by the following inconstants:
             // - `mid >= 0`: by definition
             // - `mid < size`: `mid = size / 2 + size / 4 + size / 8 ...`
-            let cmp = f(unsafe { self.get_unchecked(mid) });
+            cmp = f(unsafe { self.get_unchecked(mid) });
 
             // Binary search interacts poorly with branch prediction, so force
             // the compiler to use conditional moves if supported by the target
@@ -4910,5 +4915,37 @@ impl<const N: usize> fmt::Debug for GetManyMutError<N> {
 impl<const N: usize> fmt::Display for GetManyMutError<N> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt("an index is out of bounds or appeared multiple times in the array", f)
+    }
+}    
+
+#[cfg(kani)]
+#[unstable(feature = "kani", issue = "none")]
+pub mod verify {
+    use super::*;
+
+    // Copied from https://github.com/model-checking/kani/blob/main/library/kani/src/slice.rs
+    // should be removed when these functions are moved to `kani_core`
+    pub fn any_slice_of_array<T, const LENGTH: usize>(arr: &[T; LENGTH]) -> &[T] {
+        let (from, to) = any_range::<LENGTH>();
+        &arr[from..to]
+    }
+
+    fn any_range<const LENGTH: usize>() -> (usize, usize) {
+        let from: usize = kani::any();
+        let to: usize = kani::any();
+        kani::assume(to <= LENGTH);
+        kani::assume(from <= to);
+        (from, to)
+    }
+
+    #[kani::proof]
+    pub fn check_binary_search_by() {
+        const ARR_SIZE: usize = 1000;
+        let x: [u8; ARR_SIZE] = kani::any();
+        let xs = any_slice_of_array(&x);
+        let key: u8 = kani::any();
+        unsafe {
+            xs.binary_search_by(|p| p.cmp(&key));
+        }
     }
 }
