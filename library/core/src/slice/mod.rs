@@ -2783,7 +2783,6 @@ impl<T> [T] {
         }
         let mut base = 0usize;
 
-        let mut cmp:Ordering = Equal;
         // This loop intentionally doesn't have an early exit if the comparison
         // returns Equal. We want the number of loop iterations to depend *only*
         // on the size of the input slice so that the CPU can reliably predict
@@ -2796,7 +2795,7 @@ impl<T> [T] {
             // SAFETY: the call is made safe by the following inconstants:
             // - `mid >= 0`: by definition
             // - `mid < size`: `mid = size / 2 + size / 4 + size / 8 ...`
-            cmp = f(unsafe { self.get_unchecked(mid) });
+            let cmp = f(unsafe { self.get_unchecked(mid) });
 
             // Binary search interacts poorly with branch prediction, so force
             // the compiler to use conditional moves if supported by the target
