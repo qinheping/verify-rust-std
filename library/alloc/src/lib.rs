@@ -193,6 +193,7 @@
 #![feature(unboxed_closures)]
 #![feature(unsized_fn_params)]
 #![feature(with_negative_coherence)]
+#![cfg_attr(kani, feature(proc_macro_hygiene))]
 #![rustc_preserve_ub_checks]
 // tidy-alphabetical-end
 //
