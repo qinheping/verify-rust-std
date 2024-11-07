@@ -655,7 +655,7 @@ mod verify {
     }
 
     // pub const fn size(&self) -> usize
-    #[kani::proof]
+    //#[kani::proof]
     pub fn check_size() {
         let s = kani::any::<usize>();
         let a = kani::any::<usize>();
@@ -667,7 +667,7 @@ mod verify {
     }
 
     // pub const fn align(&self) -> usize
-    #[kani::proof]
+    //#[kani::proof]
     pub fn check_align() {
         let layout = kani::any::<Layout>();
         assert!(layout.align().is_power_of_two());

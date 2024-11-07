@@ -1959,10 +1959,10 @@ unsafe fn small_slice_eq(x: &[u8], y: &[u8]) -> bool {
     unsafe {
         let (mut px, mut py) = (x.as_ptr(), y.as_ptr());
         let (pxend, pyend) = (px.add(x.len() - 4), py.add(y.len() - 4));
-        #[cfg_attr(kani, kani::loop_invariant(same_allocation(x.as_ptr(), px) && same_allocation(y.as_ptr(), py)
+        #[safety::loop_invariant(same_allocation(x.as_ptr(), px) && same_allocation(y.as_ptr(), py)
         && px as isize >= x.as_ptr() as isize
         && py as isize >= y.as_ptr() as isize
-        && px as isize - x.as_ptr() as isize == (py as isize - y.as_ptr() as isize)))]
+        && px as isize - x.as_ptr() as isize == (py as isize - y.as_ptr() as isize))]
         while px < pxend {
             let vx = (px as *const u32).read_unaligned();
             let vy = (py as *const u32).read_unaligned();
@@ -1983,30 +1983,17 @@ unsafe fn small_slice_eq(x: &[u8], y: &[u8]) -> bool {
 pub mod verify {
     use super::*;
 
-    // Copied from https://github.com/model-checking/kani/blob/main/library/kani/src/slice.rs
-    // should be removed when these functions are moved to `kani_core`
-    pub fn any_slice_of_array<T, const LENGTH: usize>(arr: &[T; LENGTH]) -> &[T] {
-        let (from, to) = any_range::<LENGTH>();
-        &arr[from..to]
-    }
-
-    fn any_range<const LENGTH: usize>() -> (usize, usize) {
-        let from: usize = kani::any();
-        let to: usize = kani::any();
-        kani::assume(to <= LENGTH);
-        kani::assume(from <= to);
-        (from, to)
-    }
-
     #[cfg(all(kani, target_arch = "x86_64"))] // only called on x86
     #[kani::proof]
     #[kani::unwind(4)]
     pub fn check_small_slice_eq() {
+        // ARR_SIZE can `std::usize::MAX` with cbmc argument
+        // `--arrays-uf-always`
         const ARR_SIZE: usize = 1000;
         let x: [u8; ARR_SIZE] = kani::any();
         let y: [u8; ARR_SIZE] = kani::any();
-        let xs = any_slice_of_array(&x);
-        let ys = any_slice_of_array(&y);
+        let xs = kani::slice::any_slice_of_array(&x);
+        let ys = kani::slice::any_slice_of_array(&y);
         kani::assume(xs.len() == ys.len());
         unsafe {
             small_slice_eq(xs, ys);

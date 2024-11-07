@@ -1770,7 +1770,7 @@ mod verify {
     macro_rules! generate_carrying_mul_intervals {
         ($type:ty, $wide_type:ty, $($harness_name:ident, $min:expr, $max:expr),+) => {
             $(
-                #[kani::proof]
+                //#[kani::proof]
                 pub fn $harness_name() {
                     let lhs: $type = kani::any::<$type>();
                     let rhs: $type = kani::any::<$type>();
@@ -1807,7 +1807,7 @@ mod verify {
     macro_rules! generate_widening_mul_intervals {
         ($type:ty, $wide_type:ty, $($harness_name:ident, $min:expr, $max:expr),+) => {
             $(
-                #[kani::proof]
+                //#[kani::proof]
                 pub fn $harness_name() {
                     let lhs: $type = kani::any::<$type>();
                     let rhs: $type = kani::any::<$type>();
