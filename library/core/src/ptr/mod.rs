@@ -2626,7 +2626,7 @@ mod verify {
     }
 
     #[kani::proof]
-    pub fn check_swap_nonoverlapping_simple_untyped() {
+    pub fn check_swap_nonoverlapping_simple_untyped_slice_ptr() {
         const ARR_SIZE: usize = (2 << 32) -1;
         let mut x: [u8; ARR_SIZE] = kani::any();
         let mut xs = kani::slice::any_slice_of_array_mut(&mut x);
@@ -2636,6 +2636,5 @@ mod verify {
         unsafe {
             swap_nonoverlapping_simple_untyped(xs.as_mut_ptr(), ys.as_mut_ptr(), s);
         }
-}
-
+    }
 }
