@@ -403,8 +403,8 @@ const fn is_ascii(s: &[u8]) -> bool {
     // tail is always one `usize` at most to extra branch `byte_pos == len`.
     #[safety::loop_invariant(byte_pos <= len 
                             && byte_pos >= offset_to_aligned
-                            && word_ptr as usize >= start as usize + offset_to_aligned
-                            && (byte_pos - offset_to_aligned) == (word_ptr as usize - start as usize - offset_to_aligned))]
+                            && word_ptr.addr() >= start.addr() + offset_to_aligned
+                            && byte_pos == word_ptr.addr() - start.addr())]
     while byte_pos < len - USIZE_SIZE {
         // Sanity check that the read is in bounds
         debug_assert!(byte_pos + USIZE_SIZE <= len);
@@ -449,7 +449,7 @@ pub mod verify {
     #[kani::unwind(8)]
     pub fn check_is_ascii() {
         if kani::any() {
-            // TODO: ARR_SIZE can be `std::usize::MAX` with cbmc argument
+            // TODO: ARR_SIZE can be much larger with cbmc argument
             // `--arrays-uf-always`
             const ARR_SIZE: usize = 1000;
             let mut x: [u8; ARR_SIZE] = kani::any();
