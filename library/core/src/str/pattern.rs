@@ -1962,7 +1962,7 @@ unsafe fn small_slice_eq(x: &[u8], y: &[u8]) -> bool {
         && crate::ub_checks::same_allocation(y.as_ptr(), py)
         && px.addr() >= x.addr()
         && py.addr() >= y.addr()
-        && px as isize - x.as_ptr() as isize == (py as isize - y.as_ptr() as isize))]
+        && px.addr() - x.addr() == py.addr() - y.addr())]
         while px < pxend {
             let vx = (px as *const u32).read_unaligned();
             let vy = (py as *const u32).read_unaligned();
