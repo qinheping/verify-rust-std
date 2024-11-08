@@ -43,13 +43,11 @@ use crate::convert::TryInto as _;
 use crate::slice::memchr;
 use crate::{cmp, fmt};
 
-#[cfg(all(target_arch = "x86_64", any(kani, target_feature = "sse2")))] // only called on x86
+#[cfg(all(target_arch = "x86_64", any(kani, target_feature = "sse2")))]
 use safety::{loop_invariant, requires};
 
 #[cfg(kani)]
 use crate::kani;
-#[cfg(kani)]
-use crate::kani::mem::same_allocation;
 
 // Pattern
 
@@ -1960,7 +1958,8 @@ unsafe fn small_slice_eq(x: &[u8], y: &[u8]) -> bool {
     unsafe {
         let (mut px, mut py) = (x.as_ptr(), y.as_ptr());
         let (pxend, pyend) = (px.add(x.len() - 4), py.add(y.len() - 4));
-        #[loop_invariant(same_allocation(x.as_ptr(), px) && same_allocation(y.as_ptr(), py)
+        #[loop_invariant(crate::ub_checks::same_allocation(x.as_ptr(), px)
+        && crate::ub_checks::same_allocation(y.as_ptr(), py)
         && px as isize >= x.as_ptr() as isize
         && py as isize >= y.as_ptr() as isize
         && px as isize - x.as_ptr() as isize == (py as isize - y.as_ptr() as isize))]
@@ -1998,6 +1997,25 @@ pub mod verify {
         kani::assume(xs.len() == ys.len());
         unsafe {
             small_slice_eq(xs, ys);
+        }
+    }
+
+    #[cfg(all(kani, target_arch = "x86_64"))] // only called on x86
+    #[kani::proof]
+    #[kani::unwind(4)]
+    pub fn check_small_slice_eq_empty() {
+        let ptr_x = kani::any_where::<usize, _>(|val| *val != 0) as *const u8;
+        let ptr_y = kani::any_where::<usize, _>(|val| *val != 0) as *const u8;
+        kani::assume(ptr_x.is_aligned());
+        kani::assume(ptr_y.is_aligned());
+        unsafe {
+            assert_eq!(
+                small_slice_eq(
+                    crate::slice::from_raw_parts(ptr_x, 0),
+                    crate::slice::from_raw_parts(ptr_y, 0),
+                ),
+                true
+            );
         }
     }
 }
