@@ -284,10 +284,9 @@ pub mod verify {
     use super::*;
 
     #[kani::proof]
-    #[kani::unwind(8)]
     pub fn check_run_utf8_validation() {
         if kani::any() {
-            // TODO: ARR_SIZE can be `std::usize::MAX` with cbmc argument
+            // TODO: ARR_SIZE can be much larger with cbmc argument
             // `--arrays-uf-always`
             const ARR_SIZE: usize = 1000;
             let mut x: [u8; ARR_SIZE] = kani::any();
