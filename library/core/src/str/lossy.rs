@@ -209,6 +209,7 @@ impl<'a> Iterator for Utf8Chunks<'a> {
         let mut valid_up_to = 0;
         // TODO: remove `LEN` and use `self.source.len()` directly once
         // fix the issue that Kani loop contracts doesn't support `self`.
+        // Tracked in https://github.com/model-checking/kani/issues/3700
         #[cfg(kani)]
         let LEN = self.source.len();
         #[safety::loop_invariant(i <= LEN && valid_up_to == i)]
@@ -301,9 +302,7 @@ impl FusedIterator for Utf8Chunks<'_> {}
 #[stable(feature = "utf8_chunks", since = "1.79.0")]
 impl fmt::Debug for Utf8Chunks<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Utf8Chunks")
-            .field("source", &self.debug())
-            .finish()
+        f.debug_struct("Utf8Chunks").field("source", &self.debug()).finish()
     }
 }
 
