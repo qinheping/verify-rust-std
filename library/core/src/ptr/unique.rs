@@ -263,7 +263,7 @@ mod verify {
     }
 
     // pub const unsafe fn as_ref(&self) -> &T
-    //#[kani::proof]
+    #[kani::proof]
     pub fn check_as_ref() {
         let mut x : i32 = kani::any();
         let xptr = &mut x;
@@ -274,7 +274,7 @@ mod verify {
     }
 
     // pub const unsafe fn as_mut(&mut self) -> &mut T
-    //#[kani::proof]
+    #[kani::proof]
     pub fn check_as_mut() {
         let mut x : i32 = kani::any();
         let xptr = &mut x;
@@ -285,7 +285,7 @@ mod verify {
     }
 
     // pub const fn cast<U>(self) -> Unique<U>
-    //#[kani::proof]
+    #[kani::proof]
     pub fn check_cast() {
         let mut x : i32 = kani::any();
         let xptr = &mut x;

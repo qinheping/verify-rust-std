@@ -43,7 +43,8 @@ use crate::convert::TryInto as _;
 use crate::slice::memchr;
 use crate::{cmp, fmt};
 
-use safety::{requires, ensures};
+#[cfg(all(target_arch = "x86_64", any(kani, target_feature = "sse2")))] // only called on x86
+use safety::{loop_invariant, requires};
 
 #[cfg(kani)]
 use crate::kani;
@@ -1959,7 +1960,7 @@ unsafe fn small_slice_eq(x: &[u8], y: &[u8]) -> bool {
     unsafe {
         let (mut px, mut py) = (x.as_ptr(), y.as_ptr());
         let (pxend, pyend) = (px.add(x.len() - 4), py.add(y.len() - 4));
-        #[safety::loop_invariant(same_allocation(x.as_ptr(), px) && same_allocation(y.as_ptr(), py)
+        #[loop_invariant(same_allocation(x.as_ptr(), px) && same_allocation(y.as_ptr(), py)
         && px as isize >= x.as_ptr() as isize
         && py as isize >= y.as_ptr() as isize
         && px as isize - x.as_ptr() as isize == (py as isize - y.as_ptr() as isize))]
@@ -1987,7 +1988,7 @@ pub mod verify {
     #[kani::proof]
     #[kani::unwind(4)]
     pub fn check_small_slice_eq() {
-        // ARR_SIZE can `std::usize::MAX` with cbmc argument
+        // TODO: ARR_SIZE can be `std::usize::MAX` with cbmc argument
         // `--arrays-uf-always`
         const ARR_SIZE: usize = 1000;
         let x: [u8; ARR_SIZE] = kani::any();

@@ -38,13 +38,13 @@ mod verify {
     use crate::kani;
 
     /// Checks that `to_upper` does not trigger UB or panics for all valid characters.
-    //#[kani::proof]
+    #[kani::proof]
     fn check_to_upper_safety() {
         let _ = to_upper(kani::any());
     }
 
     /// Checks that `to_lower` does not trigger UB or panics for all valid characters.
-    //#[kani::proof]
+    #[kani::proof]
     fn check_to_lower_safety() {
         let _ = to_lower(kani::any());
     }
