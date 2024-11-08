@@ -1960,8 +1960,8 @@ unsafe fn small_slice_eq(x: &[u8], y: &[u8]) -> bool {
         let (pxend, pyend) = (px.add(x.len() - 4), py.add(y.len() - 4));
         #[loop_invariant(crate::ub_checks::same_allocation(x.as_ptr(), px)
         && crate::ub_checks::same_allocation(y.as_ptr(), py)
-        && px as isize >= x.as_ptr() as isize
-        && py as isize >= y.as_ptr() as isize
+        && px.addr() >= x.addr()
+        && py.addr() >= y.addr()
         && px as isize - x.as_ptr() as isize == (py as isize - y.as_ptr() as isize))]
         while px < pxend {
             let vx = (px as *const u32).read_unaligned();
