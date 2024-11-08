@@ -301,7 +301,9 @@ impl FusedIterator for Utf8Chunks<'_> {}
 #[stable(feature = "utf8_chunks", since = "1.79.0")]
 impl fmt::Debug for Utf8Chunks<'_> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Utf8Chunks").field("source", &self.debug()).finish()
+        f.debug_struct("Utf8Chunks")
+            .field("source", &self.debug())
+            .finish()
     }
 }
 
@@ -312,14 +314,23 @@ pub mod verify {
 
     #[kani::proof]
     pub fn check_next() {
-        // TODO: ARR_SIZE can be `std::usize::MAX` with cbmc argument
-        // `--arrays-uf-always`
-        const ARR_SIZE: usize = 1000;
-        let mut x: [u8; ARR_SIZE] = kani::any();
-        let mut xs = kani::slice::any_slice_of_array_mut(&mut x);
-        let mut chunks = xs.utf8_chunks();
-        unsafe {
-            chunks.next();
+        if kani::any() {
+            // TODO: ARR_SIZE can be `std::usize::MAX` with cbmc argument
+            // `--arrays-uf-always`
+            const ARR_SIZE: usize = 1000;
+            let mut x: [u8; ARR_SIZE] = kani::any();
+            let mut xs = kani::slice::any_slice_of_array_mut(&mut x);
+            let mut chunks = xs.utf8_chunks();
+            unsafe {
+                chunks.next();
+            }
+        } else {
+            let ptr = kani::any_where::<usize, _>(|val| *val != 0) as *const u8;
+            kani::assume(ptr.is_aligned());
+            unsafe {
+                let mut chunks = crate::slice::from_raw_parts(ptr, 0).utf8_chunks();
+                chunks.next();
+            }
         }
     }
 }
