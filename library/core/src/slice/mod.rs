@@ -2787,7 +2787,10 @@ impl<T> [T] {
         // returns Equal. We want the number of loop iterations to depend *only*
         // on the size of the input slice so that the CPU can reliably predict
         // the loop count.
-        #[cfg_attr(kani, kani::loop_invariant(size <= self.len() && size >= 1 && base <= self.len() && size+base <= self.len()))]
+        #[safety::loop_invariant(size <= self.len()
+            && size >= 1
+            && base <= self.len()
+            && size+base <= self.len())]
         while size > 1 {
             let half = size / 2;
             let mid = base + half;
@@ -4925,29 +4928,27 @@ impl<const N: usize> fmt::Display for GetManyMutError<N> {
 pub mod verify {
     use super::*;
 
-    // Copied from https://github.com/model-checking/kani/blob/main/library/kani/src/slice.rs
-    // should be removed when these functions are moved to `kani_core`
-    pub fn any_slice_of_array<T, const LENGTH: usize>(arr: &[T; LENGTH]) -> &[T] {
-        let (from, to) = any_range::<LENGTH>();
-        &arr[from..to]
-    }
-
-    fn any_range<const LENGTH: usize>() -> (usize, usize) {
-        let from: usize = kani::any();
-        let to: usize = kani::any();
-        kani::assume(to <= LENGTH);
-        kani::assume(from <= to);
-        (from, to)
-    }
-
     #[kani::proof]
     pub fn check_binary_search_by() {
-        const ARR_SIZE: usize = 1000;
-        let x: [u8; ARR_SIZE] = kani::any();
-        let xs = any_slice_of_array(&x);
         let key: u8 = kani::any();
-        unsafe {
-            xs.binary_search_by(|p| p.cmp(&key));
+        if kani::any() {
+            // TODO: ARR_SIZE can be `std::usize::MAX` with cbmc argument
+            // `--arrays-uf-always`
+            const ARR_SIZE: usize = 1000;
+            let x: [u8; ARR_SIZE] = kani::any();
+            let xs = kani::slice::any_slice_of_array(&x);
+            unsafe {
+                xs.binary_search_by(|p| p.cmp(&key));
+            }
+        } else {
+            let ptr = kani::any_where::<usize, _>(|val| *val != 0) as *const u8;
+            kani::assume(ptr.is_aligned());
+            unsafe {
+                assert_eq!(
+                    crate::slice::from_raw_parts(ptr, 0).binary_search_by(|p| p.cmp(&key)),
+                    Err(0)
+                );
+            }
         }
     }
 }
